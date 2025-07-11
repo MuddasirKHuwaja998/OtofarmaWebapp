@@ -29,7 +29,7 @@ function sendMessage() {
   chatArea.scrollTop = chatArea.scrollHeight;
 
  // Invia richiesta al backend
-fetch('https://chatbot-ai-i1lr.onrender.com/chat', {
+fetch('https://chatbot-otofarma-ai.onrender.com/chat', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ message })
