@@ -228,7 +228,7 @@ async function submitEarCheck() {
     resultDiv.className = 'loading';
     resultDiv.textContent = "Analisi in corso...";
     
-    const res = await fetch('https://cors-anywhere.herokuapp.com/https://otofarma-ai-diagnosis-nxyj.onrender.com/', {
+    const res = await fetch('https://otofarma-ai-diagnosi.onrender.com/', {
       method: 'POST',
       body: formData
     });
