@@ -82,6 +82,8 @@
       <div class="input-row">
         <input id="chat-input" type="text" placeholder="Chiedi pure!">
         <button class="modern-btn" onclick="sendMessage()"><span class="material-icons">send</span></button>
+        <!-- Mic button added from Code 1 -->
+        <button class="mic-button" id="micButton" style="margin-left:8px; background-image: url('https://cdn1.iconfinder.com/data/icons/social-messaging-ui-color/254000/79-512.png'); width:44px;height:44px; border-radius:50%;border:2px solid #42e695;background-color:#fff;display:flex;align-items:center;justify-content:center;"></button>
       </div>
     </section>
     <section id="earcheck" class="tab-section">
@@ -312,6 +314,117 @@
   }
   function openDirections() {
     window.open('https://www.google.com/maps/dir/?api=1&destination=Via+Ripuaria+50k-50l+50m+Giugliano+in+Campania+NA', '_blank');
+  }
+
+  // -------- Voice Feature from Code 1 --------
+  // Only for chat tab!
+  const micButton = document.getElementById('micButton');
+  const chatInput = document.getElementById('chat-input');
+  let recognitionActive = false;
+  let recognitionInstance = null;
+
+  function speakMessage(message) {
+    if (!('speechSynthesis' in window)) return;
+    let synth = window.speechSynthesis;
+    function speakWithVoices() {
+      let voices = synth.getVoices();
+      let selectedVoice = voices.find(v =>
+        v.lang === 'it-IT' && v.name.toLowerCase().includes("google italiano")
+      );
+      if (!selectedVoice) selectedVoice = voices.find(v =>
+        v.lang === 'it-IT' && (
+          (v.gender && v.gender.toLowerCase() === "female") ||
+          v.name.toLowerCase().includes("alice") ||
+          v.name.toLowerCase().includes("lucia") ||
+          v.name.toLowerCase().includes("chiara") ||
+          v.name.toLowerCase().includes("bianca") ||
+          v.name.toLowerCase().includes("silvia")
+        )
+      );
+      if (!selectedVoice) selectedVoice = voices.find(v => v.lang === 'it-IT');
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.lang = 'it-IT';
+      if (selectedVoice) utterance.voice = selectedVoice;
+      utterance.pitch = 1.05;
+      utterance.rate = 0.97;
+      synth.speak(utterance);
+    }
+    if (synth.onvoiceschanged !== undefined) {
+      synth.onvoiceschanged = speakWithVoices;
+    }
+    speakWithVoices();
+  }
+
+  function sendMessage(fromVoice=false) {
+    const message = chatInput.value.trim();
+    if (message) {
+      // Your AJAX call or chat logic here, or call existing sendMessage logic if you have
+      if (typeof window.sendMessageOriginal === "function") {
+        window.sendMessageOriginal(fromVoice);
+      } else {
+        // fallback: display locally
+        const chatArea = document.getElementById('chat-area');
+        const div = document.createElement('div');
+        div.className = 'user-msg';
+        div.textContent = message;
+        chatArea.appendChild(div);
+        chatInput.value = '';
+        // Simulate bot reply
+        setTimeout(() => {
+          const botDiv = document.createElement('div');
+          botDiv.className = 'bot-msg';
+          botDiv.textContent = "Risposta simulata dell'assistente.";
+          chatArea.appendChild(botDiv);
+          speakMessage("Risposta simulata dell'assistente.");
+        }, 800);
+      }
+    }
+  }
+
+  micButton.addEventListener('click', () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Il riconoscimento vocale non è supportato in questo browser. Usa Google Chrome su HTTPS o localhost.');
+      return;
+    }
+    if (recognitionActive) {
+      recognitionInstance && recognitionInstance.stop();
+      return;
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    recognitionInstance = new SpeechRecognition();
+    recognitionInstance.lang = 'it-IT';
+    recognitionInstance.continuous = false;
+    recognitionInstance.interimResults = false;
+
+    recognitionInstance.onstart = () => {
+      recognitionActive = true;
+      micButton.classList.add('listening');
+      micButton.disabled = true;
+    };
+    recognitionInstance.onend = () => {
+      recognitionActive = false;
+      micButton.classList.remove('listening');
+      micButton.disabled = false;
+    };
+    recognitionInstance.onerror = (event) => {
+      recognitionActive = false;
+      micButton.classList.remove('listening');
+      micButton.disabled = false;
+      alert('Errore microfono: ' + event.error);
+    };
+    recognitionInstance.onresult = event => {
+      const transcript = event.results[0][0].transcript;
+      chatInput.value = transcript;
+      sendMessage(true);
+    };
+
+    recognitionInstance.start();
+  });
+
+  // Preload voices for best experience
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.getVoices();
   }
 </script>
 </body>
