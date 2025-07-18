@@ -16,54 +16,6 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:400,600&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-.mic-button-custom {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 2px solid #42e695;
-  background-color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 8px;
-  margin-right: 0;
-  cursor: pointer;
-  transition: box-shadow 0.18s, transform 0.2s;
-  box-shadow: 0 2px 8px rgba(66,230,149,0.13);
-  outline: none;
-  position: relative;
-  z-index: 2;
-  overflow: hidden;
-}
-.mic-button-custom img {
-  width: 32px;
-  height: 32px;
-  object-fit: cover;
-  border-radius: 50%;
-  pointer-events: none;
-  transition: filter 0.18s;
-  display: block;
-  background-color: #fff;
-}
-.mic-button-custom.listening {
-  box-shadow: 0 0 0 3px #42e69588;
-  background-color: #e8f5e9;
-  animation: pulse-mic 1s infinite;
-}
-@keyframes pulse-mic {
-  0% { transform: scale(1);}
-  60% { transform: scale(1.13);}
-  100% { transform: scale(1);}
-}
-.input-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  position: relative;
-  z-index: 1;
-}
-</style>
 </head>
 <body>
 <div class="app-container">
@@ -129,11 +81,9 @@
       </div>
       <div class="input-row">
         <input id="chat-input" type="text" placeholder="Chiedi pure!">
-        <!-- Mic button inserted AFTER input and BEFORE send button, styled and animated only on listen -->
-        <button class="mic-button-custom" id="micButton" title="Premi per parlare">
-          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxglgxUT-MedSFFxKkGSQZq1Xk_2Kl7B8b_Q&sip=x480" alt="Microfono">
-        </button>
-        <button class="modern-btn" onclick="sendMessage()" id="sendButton"><span class="material-icons">send</span></button>
+        <button class="modern-btn" onclick="sendMessage()"><span class="material-icons">send</span></button>
+        <!-- Mic button added from Code 1 -->
+        <button class="mic-button" id="micButton" style="margin-left:8px; background-image: url('https://cdn1.iconfinder.com/data/icons/social-messaging-ui-color/254000/79-512.png'); width:44px;height:44px; border-radius:50%;border:2px solid #42e695;background-color:#fff;display:flex;align-items:center;justify-content:center;"></button>
       </div>
     </section>
     <section id="earcheck" class="tab-section">
@@ -370,7 +320,6 @@
   // Only for chat tab!
   const micButton = document.getElementById('micButton');
   const chatInput = document.getElementById('chat-input');
-  const sendButton = document.getElementById('sendButton');
   let recognitionActive = false;
   let recognitionInstance = null;
 
@@ -379,7 +328,6 @@
     let synth = window.speechSynthesis;
     function speakWithVoices() {
       let voices = synth.getVoices();
-      // Try Google Italian (female), then common Italian female voice names
       let selectedVoice = voices.find(v =>
         v.lang === 'it-IT' && v.name.toLowerCase().includes("google italiano")
       );
@@ -393,12 +341,11 @@
           v.name.toLowerCase().includes("silvia")
         )
       );
-      // As last fallback pick any it-IT voice
       if (!selectedVoice) selectedVoice = voices.find(v => v.lang === 'it-IT');
       const utterance = new SpeechSynthesisUtterance(message);
       utterance.lang = 'it-IT';
       if (selectedVoice) utterance.voice = selectedVoice;
-      utterance.pitch = 1.07;
+      utterance.pitch = 1.05;
       utterance.rate = 0.97;
       synth.speak(utterance);
     }
@@ -433,14 +380,6 @@
       }
     }
   }
-
-  sendButton.addEventListener('click', () => sendMessage(false));
-  chatInput.addEventListener('keypress', (event) => {
-    if (event.key === 'Enter') {
-      sendMessage(false);
-      event.preventDefault();
-    }
-  });
 
   micButton.addEventListener('click', () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
